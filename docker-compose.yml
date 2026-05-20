@@ -1,0 +1,10 @@
+services:
+  nepv-lens:
+    build: .
+    ports:
+      - "5173:5173"
+    environment:
+      - VITE_MATRIX_MAX_DIM=4
+    volumes:
+      - .:/app
+      - /app/node_modules

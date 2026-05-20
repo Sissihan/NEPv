@@ -1,0 +1,362 @@
+[
+  {
+    "file": "01-nav-bar.png",
+    "control_id": "nav-bar",
+    "control_type": "区域",
+    "label_zh": "顶部导航栏",
+    "section_zh": "全局导航",
+    "action_zh": "固定于页面顶部，包含品牌、四个锚点链接与语言选择。",
+    "selector": ".site-nav"
+  },
+  {
+    "file": "02-nav-brand.png",
+    "control_id": "nav.brand",
+    "control_type": "链接",
+    "label_zh": "NEPv Lens（品牌）",
+    "section_zh": "全局导航",
+    "action_zh": "单击回到首页（#hero）区域。",
+    "selector": "a.brand"
+  },
+  {
+    "file": "03-nav-link-hero.png",
+    "control_id": "nav.home",
+    "control_type": "链接",
+    "label_zh": "首页",
+    "section_zh": "全局导航",
+    "action_zh": "单击平滑滚动至「首页」区块（#hero）。",
+    "selector": "nav.site-nav a[href=\"#hero\"]"
+  },
+  {
+    "file": "04-nav-link-compare.png",
+    "control_id": "nav.compare",
+    "control_type": "链接",
+    "label_zh": "对比",
+    "section_zh": "全局导航",
+    "action_zh": "单击平滑滚动至「对比」区块（#compare）。",
+    "selector": "nav.site-nav a[href=\"#compare\"]"
+  },
+  {
+    "file": "05-nav-link-playground.png",
+    "control_id": "nav.playground",
+    "control_type": "链接",
+    "label_zh": "实验室",
+    "section_zh": "全局导航",
+    "action_zh": "单击平滑滚动至「实验室」区块（#playground）。",
+    "selector": "nav.site-nav a[href=\"#playground\"]"
+  },
+  {
+    "file": "06-nav-link-pitfalls.png",
+    "control_id": "nav.pitfalls",
+    "control_type": "链接",
+    "label_zh": "误区",
+    "section_zh": "全局导航",
+    "action_zh": "单击平滑滚动至「误区」区块（#pitfalls）。",
+    "selector": "nav.site-nav a[href=\"#pitfalls\"]"
+  },
+  {
+    "file": "07-lang-switcher.png",
+    "control_id": "lang.switcher",
+    "control_type": "区域",
+    "label_zh": "语言选择区",
+    "section_zh": "全局导航 · 语言",
+    "action_zh": "包含「语言」标签与下拉框，切换后整站文案即时更新。",
+    "selector": ".lang-switcher"
+  },
+  {
+    "file": "08-lang-label.png",
+    "control_id": "lang.label",
+    "control_type": "标签",
+    "label_zh": "语言",
+    "section_zh": "全局导航 · 语言",
+    "action_zh": "标识下方下拉框用途；点击标签会聚焦到 #locale-select。",
+    "selector": "label[for='locale-select']"
+  },
+  {
+    "file": "09-lang-en.png",
+    "control_id": "locale-select.en",
+    "control_type": "下拉选项",
+    "label_zh": "English",
+    "section_zh": "全局导航 · 语言",
+    "action_zh": "在 #locale-select 中选择「English」；写入 localStorage 键 nepv-lens-locale。",
+    "selector": "#locale-select"
+  },
+  {
+    "file": "10-lang-zh-cn.png",
+    "control_id": "locale-select.zh-CN",
+    "control_type": "下拉选项",
+    "label_zh": "简体中文",
+    "section_zh": "全局导航 · 语言",
+    "action_zh": "在 #locale-select 中选择「简体中文」；写入 localStorage 键 nepv-lens-locale。",
+    "selector": "#locale-select"
+  },
+  {
+    "file": "11-lang-zh-tw.png",
+    "control_id": "locale-select.zh-TW",
+    "control_type": "下拉选项",
+    "label_zh": "繁體中文",
+    "section_zh": "全局导航 · 语言",
+    "action_zh": "在 #locale-select 中选择「繁體中文」；写入 localStorage 键 nepv-lens-locale。",
+    "selector": "#locale-select"
+  },
+  {
+    "file": "12-section-hero.png",
+    "control_id": "section.hero",
+    "control_type": "展示区",
+    "label_zh": "首页（Hero）",
+    "section_zh": "首页",
+    "action_zh": "只读：NEPv 定义、公式与教学说明，无按钮。",
+    "selector": "#hero"
+  },
+  {
+    "file": "13-section-compare.png",
+    "control_id": "section.compare",
+    "control_type": "展示区",
+    "label_zh": "线性 EVP vs NEPv 对比",
+    "section_zh": "对比",
+    "action_zh": "只读：左右两张概念卡片与底部注释，无交互控件。",
+    "selector": "#compare"
+  },
+  {
+    "file": "14-playground-overview.png",
+    "control_id": "section.playground",
+    "control_type": "区域",
+    "label_zh": "实验室总览（三栏布局）",
+    "section_zh": "实验室",
+    "action_zh": "左侧：模型选择、参数滑块、AI 提问框；中间：罗盘、Polar Plot、热图、谱图；右侧：AI 数学助教侧边栏（实时状态 + 交互提问）。",
+    "selector": "#playground"
+  },
+  {
+    "file": "15-residual-banner.png",
+    "control_id": "playground.residualFormula",
+    "control_type": "展示区",
+    "label_zh": "归一化残差公式横幅",
+    "section_zh": "实验室",
+    "action_zh": "只读：永久显示 r(x,λ) 的 TeX 与纯文本公式（PRD §5.1）。",
+    "selector": ".residual-formula-banner"
+  },
+  {
+    "file": "16-model-select-a.png",
+    "control_id": "model-select",
+    "control_type": "下拉框",
+    "label_zh": "玩具模型（当前：模型 A）",
+    "section_zh": "实验室 · 模型",
+    "action_zh": "在 #model-select 中选择「模型 A — 秩一依赖（2×2）」；切换后重置 x 与参数并关闭 Pitfall。",
+    "selector": "#model-select"
+  },
+  {
+    "file": "16b-physical-note.png",
+    "control_id": "model.physical",
+    "control_type": "展示区",
+    "label_zh": "物理背景说明",
+    "section_zh": "实验室 · 模型",
+    "action_zh": "模型 A 关联「光子晶体 / 量子点耦合」，解释 α 如何影响物理系统行为。",
+    "selector": ".physical-note"
+  },
+  {
+    "file": "17-slider-alpha.png",
+    "control_id": "alpha",
+    "control_type": "滑块",
+    "label_zh": "α（耦合强度）",
+    "section_zh": "实验室 · 模型 A 参数",
+    "action_zh": "拖动 #alpha（范围约 -1.5～1.5）；右侧数值实时更新，A(x) 与谱联动。",
+    "selector": "#alpha"
+  },
+  {
+    "file": "18-slider-lambda.png",
+    "control_id": "lambda",
+    "control_type": "滑块",
+    "label_zh": "λ 猜测值（残差）",
+    "section_zh": "实验室 · 残差",
+    "action_zh": "拖动 #lambda（-1～4）；改变 r(x,λ) 显示，不改变 A(x) 本身。",
+    "selector": "#lambda"
+  },
+  {
+    "file": "19-checkbox-freeze-off.png",
+    "control_id": "freeze",
+    "control_type": "复选框",
+    "label_zh": "误区：冻结当前 x 处的 A（未勾选）",
+    "section_zh": "实验室 · Pitfall",
+    "action_zh": "勾选 #freeze 后冻结 A(x₀) 并显示对比热图/谱；再次单击取消。",
+    "selector": ".pitfall-toggle"
+  },
+  {
+    "file": "20-checkbox-freeze-on.png",
+    "control_id": "freeze.checked",
+    "control_type": "复选框 + 徽章",
+    "label_zh": "误区：冻结（已勾选）",
+    "section_zh": "实验室 · Pitfall",
+    "action_zh": "显示红色 Pitfall 徽章与 tooltip；右侧出现 A(x₀) 热图与冻结谱。",
+    "selector": ".pitfall-toggle"
+  },
+  {
+    "file": "21-residual-metric.png",
+    "control_id": "residual.metric",
+    "control_type": "展示区",
+    "label_zh": "残差 r(x, λ) 数值",
+    "section_zh": "实验室 · 残差",
+    "action_zh": "只读：当前 x 与 λ 下的归一化残差（六位小数）。",
+    "selector": ".playground-grid aside .card:has(.metric)"
+  },
+  {
+    "file": "22-iteration-lab.png",
+    "control_id": "iteration.lab",
+    "control_type": "区域",
+    "label_zh": "迭代实验室",
+    "section_zh": "实验室 · 迭代",
+    "action_zh": "含三个按钮：播放、单步、重置为参考初值。",
+    "selector": ".iteration-lab"
+  },
+  {
+    "file": "23-btn-iteration-play.png",
+    "control_id": "iteration.play",
+    "control_type": "按钮",
+    "label_zh": "播放",
+    "section_zh": "实验室 · 迭代",
+    "action_zh": "从 PRD 参考初值自动迭代（最多 200 步）并更新 x 与 r。",
+    "selector": ".iteration-lab button:nth-of-type(1)"
+  },
+  {
+    "file": "24-btn-iteration-step.png",
+    "control_id": "iteration.step",
+    "control_type": "按钮",
+    "label_zh": "单步",
+    "section_zh": "实验室 · 迭代",
+    "action_zh": "执行一步不动点型迭代；未收敛达上限后该按钮禁用。",
+    "selector": ".iteration-lab button:nth-of-type(2)"
+  },
+  {
+    "file": "25-btn-iteration-reset.png",
+    "control_id": "iteration.resetRef",
+    "control_type": "按钮",
+    "label_zh": "重置为参考初值",
+    "section_zh": "实验室 · 迭代",
+    "action_zh": "恢复基线 x 与步数 k=0，清除未收敛警告。",
+    "selector": ".iteration-lab button:nth-of-type(3)"
+  },
+  {
+    "file": "26-vector-compass.png",
+    "control_id": "compass.svg",
+    "control_type": "拖拽区",
+    "label_zh": "向量罗盘（||x||=1）",
+    "section_zh": "实验室 · 向量",
+    "action_zh": "在 SVG 圆盘上拖动蓝色端点设置 x 方向；拖出圆外会投影并 toast 提示归一化。",
+    "selector": ".vector-compass"
+  },
+  {
+    "file": "27-heatmap-spectrum.png",
+    "control_id": "viz.main",
+    "control_type": "展示区",
+    "label_zh": "热图与瞬时谱",
+    "section_zh": "实验室 · 可视化",
+    "action_zh": "只读：A(x) 热图、特征值条形图；Pitfall 开启时出现冻结对比列。",
+    "selector": ".playground-grid > main"
+  },
+  {
+    "file": "27b-polar-plot.png",
+    "control_id": "polar-plot",
+    "control_type": "展示区",
+    "label_zh": "残差极坐标图 r(θ)",
+    "section_zh": "实验室 · 可视化",
+    "action_zh": "显示残差在单位圆上的分布，红色点标记 θ=0 方向；实时响应参数变化。",
+    "selector": ".polar-plot"
+  },
+  {
+    "file": "27c-ai-tutor.png",
+    "control_id": "ai-tutor",
+    "control_type": "侧边栏",
+    "label_zh": "AI 数学助教",
+    "section_zh": "实验室 · AI",
+    "action_zh": "右侧固定侧边栏：实时显示残差、λ、α 等状态；支持自然语言提问，AI 返回基于当前参数的收敛建议与误区解释。",
+    "selector": ".ai-tutor"
+  },
+  {
+    "file": "28-model-select-b.png",
+    "control_id": "model-select.b",
+    "control_type": "下拉框",
+    "label_zh": "玩具模型（当前：模型 B）",
+    "section_zh": "实验室 · 模型",
+    "action_zh": "选择「模型 B — 对角缩放（3×3）」；显示 β₁/β₂/β₃ 与 x₃ 滑块。",
+    "selector": "#model-select"
+  },
+  {
+    "file": "29-slider-beta1.png",
+    "control_id": "beta1",
+    "control_type": "滑块",
+    "label_zh": "β₁",
+    "section_zh": "实验室 · 模型 B 参数",
+    "action_zh": "拖动 #beta1 改变对角缩放强度；特征值即对角元。",
+    "selector": "#beta1"
+  },
+  {
+    "file": "30-slider-beta2.png",
+    "control_id": "beta2",
+    "control_type": "滑块",
+    "label_zh": "β₂",
+    "section_zh": "实验室 · 模型 B 参数",
+    "action_zh": "拖动 #beta2 改变对角缩放强度；特征值即对角元。",
+    "selector": "#beta2"
+  },
+  {
+    "file": "31-slider-beta3.png",
+    "control_id": "beta3",
+    "control_type": "滑块",
+    "label_zh": "β₃",
+    "section_zh": "实验室 · 模型 B 参数",
+    "action_zh": "拖动 #beta3 改变对角缩放强度；特征值即对角元。",
+    "selector": "#beta3"
+  },
+  {
+    "file": "32-slider-x3.png",
+    "control_id": "x3",
+    "control_type": "滑块",
+    "label_zh": "x₃（单位球面）",
+    "section_zh": "实验室 · 向量（3D）",
+    "action_zh": "拖动 #x3 调节第三分量；与罗盘 x₁,x₂ 共同满足 ||x||=1。",
+    "selector": "#x3"
+  },
+  {
+    "file": "33-section-pitfalls.png",
+    "control_id": "section.pitfalls",
+    "control_type": "展示区",
+    "label_zh": "常见误区与 FAQ",
+    "section_zh": "误区",
+    "action_zh": "只读：冻结 A 说明、尺度/NEP/复特征值等条目，无按钮。",
+    "selector": "#pitfalls"
+  },
+  {
+    "file": "34-footer.png",
+    "control_id": "footer",
+    "control_type": "展示区",
+    "label_zh": "页脚免责声明",
+    "section_zh": "页脚",
+    "action_zh": "只读：教学演示声明。",
+    "selector": "footer"
+  },
+  {
+    "file": "35-numeric-x1.png",
+    "control_id": "compass.numericX1",
+    "control_type": "数字输入",
+    "label_zh": "x₁（数值）",
+    "section_zh": "实验室 · 向量（移动端）",
+    "action_zh": "在宽度 ≤375px 时显示；输入 x₁ 后自动归一化，范围 [-1,1]。",
+    "selector": ".compass-numeric label:first-of-type"
+  },
+  {
+    "file": "36-numeric-x2.png",
+    "control_id": "compass.numericX2",
+    "control_type": "数字输入",
+    "label_zh": "x₂（数值）",
+    "section_zh": "实验室 · 向量（移动端）",
+    "action_zh": "与罗盘拖拽、x₃ 滑块（模型 B）共同决定单位球面上的 x。",
+    "selector": ".compass-numeric label:last-of-type"
+  },
+  {
+    "file": "37-mobile-playground.png",
+    "control_id": "viewport.mobile",
+    "control_type": "视口",
+    "label_zh": "移动端实验室（375px）",
+    "section_zh": "移动端",
+    "action_zh": "触控拖动罗盘；x₁/x₂ 数值输入与可横向滑动热图；谱图纵向堆叠。",
+    "selector": null
+  }
+]
