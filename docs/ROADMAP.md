@@ -28,9 +28,9 @@ Resolve PRD §15 open questions before coding:
 | Q1 Complex vs real UI | Real 2D/3D for \(x\); \(\lambda\) as magnitude + phase if complex | Viz components |
 | Q2 Routing | Single-page with anchor nav | Routing, GH Pages `base` |
 | Q3 WebGL | No for P0; heatmap + bar charts only | Scope control |
-| Q4 Languages | English UI; REPORT in Chinese or English (pick one) | Copy workload |
+| Q4 Languages | English default UI; Simplified Chinese + Traditional Chinese i18n | Copy in locale files |
 
-**Stack lock (PRD §8.1):** Vite + React, Vitest, Tailwind (or CSS Modules), D3/Canvas for heatmaps, dense eig for \(n \le 4\), GitHub Pages.
+**Stack lock (PRD §8.1):** Vite 8 + React 18, Vitest, CSS modules, custom SVG (compass/polar), dense eig for \(n \le 4\), GitHub Pages.
 
 ---
 
@@ -109,12 +109,11 @@ Each model exports: `A(x)`, param schema, singularity notes, default params.
 
 | Section | Route/anchor | Features |
 |---------|--------------|----------|
-| Hero | `#` | One-line NEPv definition (F-01) |
-| Compare | `#compare` | Linear EVP vs NEPv, same toy (US-1) |
-| Playground | `#playground` | F-02–F-04 |
-| Pitfalls | `#pitfalls` | F-05 (can stub, fill Phase 3) |
-| Methods | `#methods` | Stub |
-| References | `#references` | Stub |
+| Intro band | `#hero` + `#compare` | Definition + linear vs NEPv (F-01, US-1) |
+| Playground | `#playground` | Lab shell: compass, observe, polar, iteration (F-02–F-04) |
+| AI Tutor | `#ai-tutor` | Rule-based tutor below lab |
+| Pitfalls | `#pitfalls` | F-05 FAQ + pitfall card |
+| References | `#references` | Collapsible bibliography (F-06) |
 
 **UX:** ~72ch max width; KaTeX; one primary question per viewport (PRD §10).
 

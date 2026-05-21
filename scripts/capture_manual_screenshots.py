@@ -1,9 +1,10 @@
 # -*- coding: utf-8 -*-
-"""Capture UI screenshots for the operation manual (Playwright + Vite preview)."""
+"""Capture UI screenshots for the English operation manual (Playwright + Vite preview)."""
 
 from __future__ import annotations
 
 import json
+import shutil
 import subprocess
 import sys
 import time
@@ -15,17 +16,21 @@ ROOT = Path(__file__).resolve().parents[1]
 OUT_DIR = ROOT / "docs" / "manual-screenshots"
 PREVIEW_PORT = 4173
 BASE_URL = f"http://127.0.0.1:{PREVIEW_PORT}"
-NODE = Path(
-    r"c:\Users\hanjianzhong\AppData\Local\Programs\cursor\resources\app\resources\helpers\node.exe"
-)
-VITE_PREVIEW = ROOT / "node_modules" / "vite" / "bin" / "vite.js"
+
+
+def resolve_node() -> str:
+    node = shutil.which("node")
+    if node:
+        return node
+    raise RuntimeError("Node.js not found on PATH — install Node 18+ and retry.")
 
 
 def start_preview() -> subprocess.Popen:
     if not (ROOT / "dist" / "index.html").is_file():
         raise FileNotFoundError("dist/ missing — run: npm run build")
+    node = resolve_node()
     return subprocess.Popen(
-        [str(NODE), str(VITE_PREVIEW), "preview", "--port", str(PREVIEW_PORT), "--host", "127.0.0.1"],
+        [node, "node_modules/vite/bin/vite.js", "preview", "--port", str(PREVIEW_PORT), "--host", "127.0.0.1"],
         cwd=ROOT,
         stdout=subprocess.DEVNULL,
         stderr=subprocess.DEVNULL,
@@ -57,6 +62,14 @@ def shot(page, name: str, *, selector: str | None = None, full_page: bool = Fals
 
 def scroll_to(page, selector: str) -> None:
     page.locator(selector).first.scroll_into_view_if_needed()
+    page.wait_for_timeout(250)
+
+
+def open_details(page, selector: str) -> None:
+    loc = page.locator(selector).first
+    loc.scroll_into_view_if_needed()
+    if loc.evaluate("el => !el.open"):
+        loc.locator("summary").click()
     page.wait_for_timeout(200)
 
 
@@ -69,9 +82,9 @@ def main() -> None:
         file: str,
         control_id: str,
         control_type: str,
-        label_zh: str,
-        section_zh: str,
-        action_zh: str,
+        label: str,
+        section: str,
+        action: str,
         *,
         selector: str | None = None,
     ) -> None:
@@ -80,9 +93,9 @@ def main() -> None:
                 "file": file,
                 "control_id": control_id,
                 "control_type": control_type,
-                "label_zh": label_zh,
-                "section_zh": section_zh,
-                "action_zh": action_zh,
+                "label": label,
+                "section": section,
+                "action": action,
                 "selector": selector,
             }
         )
@@ -90,418 +103,481 @@ def main() -> None:
     try:
         with sync_playwright() as p:
             browser = p.chromium.launch()
-            page = browser.new_page(viewport={"width": 1280, "height": 900})
+            page = browser.new_page(viewport={"width": 1400, "height": 900})
             wait_server(page)
             page.wait_for_load_state("networkidle")
+            page.select_option("#locale-select", "en")
+            page.wait_for_timeout(400)
 
-            # --- Nav ---
+            # --- Navigation ---
             shot(page, "01-nav-bar", selector=".site-nav")
             add(
                 "01-nav-bar.png",
                 "nav-bar",
-                "区域",
-                "顶部导航栏",
-                "全局导航",
-                "固定于页面顶部，包含品牌、四个锚点链接与语言选择。",
+                "Region",
+                "Top navigation bar",
+                "Global navigation",
+                "Fixed header: brand, section anchors (Definition through References), and locale selector.",
                 selector=".site-nav",
             )
 
-            shot(page, "02-nav-brand", selector="a.brand")
-            add(
-                "02-nav-brand.png",
-                "nav.brand",
-                "链接",
-                "NEPv Lens（品牌）",
-                "全局导航",
-                "单击回到首页（#hero）区域。",
-                selector="a.brand",
-            )
-
-            for idx, (href, key, label) in enumerate(
-                [
-                    ("#hero", "nav.home", "首页"),
-                    ("#compare", "nav.compare", "对比"),
-                    ("#playground", "nav.playground", "实验室"),
-                    ("#pitfalls", "nav.pitfalls", "误区"),
-                ],
-                start=3,
-            ):
-                fn = f"{idx:02d}-nav-link-{href[1:]}"
-                shot(page, fn, selector=f'nav.site-nav a[href="{href}"]')
+            nav_links = [
+                ("#hero", "nav.home", "Definition"),
+                ("#compare", "nav.compare", "Compare"),
+                ("#playground", "nav.playground", "Lab"),
+                ("#ai-tutor", "nav.aiTutor", "AI Tutor"),
+                ("#pitfalls", "nav.pitfalls", "Pitfalls"),
+                ("#references", "nav.references", "References"),
+            ]
+            for idx, (href, key, label) in enumerate(nav_links, start=2):
+                fn = f"{idx:02d}-nav-{href[1:]}"
+                sel = f'nav.site-nav a[href="{href}"]'
+                shot(page, fn, selector=sel)
                 add(
                     f"{fn}.png",
                     key,
-                    "链接",
+                    "Link",
                     label,
-                    "全局导航",
-                    f"单击平滑滚动至「{label}」区块（{href}）。",
-                    selector=f'nav.site-nav a[href="{href}"]',
+                    "Global navigation",
+                    f"Click to scroll smoothly to the “{label}” section ({href}).",
+                    selector=sel,
                 )
 
-            # Language switcher — label + select + each option state
-            shot(page, "07-lang-switcher", selector=".lang-switcher")
+            shot(page, "08-lang-switcher", selector=".lang-switcher")
             add(
-                "07-lang-switcher.png",
+                "08-lang-switcher.png",
                 "lang.switcher",
-                "区域",
-                "语言选择区",
-                "全局导航 · 语言",
-                "包含「语言」标签与下拉框，切换后整站文案即时更新。",
+                "Region",
+                "Locale selector",
+                "Global navigation · Locale",
+                "Choose English, Simplified Chinese, or Traditional Chinese; UI strings update immediately.",
                 selector=".lang-switcher",
             )
 
-            shot(page, "08-lang-label", selector="label[for='locale-select']")
-            add(
-                "08-lang-label.png",
-                "lang.label",
-                "标签",
-                "语言",
-                "全局导航 · 语言",
-                "标识下方下拉框用途；点击标签会聚焦到 #locale-select。",
-                selector="label[for='locale-select']",
-            )
-
-            locales = [
+            for loc, fn, opt_label in [
                 ("en", "09-lang-en", "English"),
-                ("zh-CN", "10-lang-zh-cn", "简体中文"),
-                ("zh-TW", "11-lang-zh-tw", "繁體中文"),
-            ]
-            for loc, fn, opt_label in locales:
+                ("zh-CN", "10-lang-zh-cn", "Simplified Chinese (zh-CN)"),
+                ("zh-TW", "11-lang-zh-tw", "Traditional Chinese (zh-TW)"),
+            ]:
                 page.select_option("#locale-select", loc)
                 page.wait_for_timeout(350)
                 shot(page, fn, selector="#locale-select")
                 add(
                     f"{fn}.png",
                     f"locale-select.{loc}",
-                    "下拉选项",
+                    "Dropdown",
                     opt_label,
-                    "全局导航 · 语言",
-                    f"在 #locale-select 中选择「{opt_label}」；写入 localStorage 键 nepv-lens-locale。",
+                    "Global navigation · Locale",
+                    f"Set #locale-select to “{opt_label}”; persisted in localStorage key nepv-lens-locale.",
                     selector="#locale-select",
                 )
-
-            page.select_option("#locale-select", "zh-CN")
+            page.select_option("#locale-select", "en")
             page.wait_for_timeout(300)
 
-            # --- Hero ---
-            scroll_to(page, "#hero")
-            shot(page, "12-section-hero", selector="#hero")
+            # --- Intro band (Definition + Compare) ---
+            scroll_to(page, ".intro-band")
+            shot(page, "12-intro-band", selector=".intro-band")
             add(
-                "12-section-hero.png",
+                "12-intro-band.png",
+                "intro.band",
+                "Region",
+                "Definition & Compare (side-by-side)",
+                "Intro",
+                "Read-only: NEPv definition (left) and linear EVP vs NEPv comparison (right), separated by a vertical divider.",
+                selector=".intro-band",
+            )
+
+            scroll_to(page, "#hero")
+            shot(page, "13-section-hero", selector="#hero")
+            add(
+                "13-section-hero.png",
                 "section.hero",
-                "展示区",
-                "首页（Hero）",
-                "首页",
-                "只读：NEPv 定义、公式与教学说明，无按钮。",
+                "Display",
+                "Definition (Hero)",
+                "Intro · Definition",
+                "Read-only: problem statement, formula, and teaching notes.",
                 selector="#hero",
             )
 
-            # --- Compare ---
             scroll_to(page, "#compare")
-            shot(page, "13-section-compare", selector="#compare")
+            shot(page, "14-section-compare", selector="#compare")
             add(
-                "13-section-compare.png",
+                "14-section-compare.png",
                 "section.compare",
-                "展示区",
-                "线性 EVP vs NEPv 对比",
-                "对比",
-                "只读：左右两张概念卡片与底部注释，无交互控件。",
+                "Display",
+                "Linear EVP vs NEPv",
+                "Intro · Compare",
+                "Read-only: two concept panels and footnote; no interactive controls.",
                 selector="#compare",
             )
 
-            # --- Playground ---
+            # --- Playground / Lab ---
             scroll_to(page, "#playground")
-            shot(page, "14-playground-overview", selector="#playground")
+            shot(page, "15-playground-overview", selector="#playground")
             add(
-                "14-playground-overview.png",
+                "15-playground-overview.png",
                 "section.playground",
-                "区域",
-                "实验室总览（三栏布局）",
-                "实验室",
-                "左侧：模型选择、参数滑块、AI 提问框；中间：罗盘、Polar Plot、热图、谱图；右侧：AI 数学助教侧边栏（实时状态 + 交互提问）。",
+                "Region",
+                "Interactive lab (overview)",
+                "Lab",
+                "Two-column shell: compass, heatmap/spectrum, polar plot, iteration lab (left); setup drawer with model, sliders, freeze pitfall (right). AI Tutor sits below the shell.",
                 selector="#playground",
             )
 
-            shot(page, "15-residual-banner", selector=".residual-formula-banner")
+            shot(page, "16-lab-shell", selector=".lab-shell")
             add(
-                "15-residual-banner.png",
+                "16-lab-shell.png",
+                "lab.shell",
+                "Region",
+                "Lab workspace (compass + observe + controls)",
+                "Lab",
+                "Main teaching surface: vector compass, residual banner, observe zone, polar plot, iteration controls, and collapsible setup drawer.",
+                selector=".lab-shell",
+            )
+
+            shot(page, "17-residual-banner", selector=".residual-formula-banner")
+            add(
+                "17-residual-banner.png",
                 "playground.residualFormula",
-                "展示区",
-                "归一化残差公式横幅",
-                "实验室",
-                "只读：永久显示 r(x,λ) 的 TeX 与纯文本公式（PRD §5.1）。",
+                "Display",
+                "Relative residual formula banner",
+                "Lab",
+                "Read-only: TeX and plain-text definition of r_rel(x, λ).",
                 selector=".residual-formula-banner",
             )
 
-            shot(page, "16-model-select-a", selector="#model-select")
+            shot(page, "18-sidebar-drawer", selector=".lab-sidebar-drawer")
             add(
-                "16-model-select-a.png",
+                "18-sidebar-drawer.png",
+                "lab.sidebarDrawer",
+                "Collapsible panel",
+                "Model & controls drawer",
+                "Lab · Setup",
+                "Expand/collapse the right-hand setup drawer (model, parameters, λ guess, freeze pitfall, residual readout, reset).",
+                selector=".lab-sidebar-drawer",
+            )
+
+            shot(page, "19-model-select-a", selector="#model-select")
+            add(
+                "19-model-select-a.png",
                 "model-select",
-                "下拉框",
-                "玩具模型（当前：模型 A）",
-                "实验室 · 模型",
-                "在 #model-select 中选择「模型 A — 秩一依赖（2×2）」；切换后重置 x 与参数并关闭 Pitfall。",
+                "Dropdown",
+                "Toy model (Model A — rank-one 2×2)",
+                "Lab · Model",
+                "Select Model A; resets x and parameters and turns off freeze pitfall.",
                 selector="#model-select",
             )
 
-            shot(page, "16b-physical-note", selector=".physical-note")
+            open_details(page, ".lab-details")
+            shot(page, "20-physical-details", selector=".lab-details[open]")
             add(
-                "16b-physical-note.png",
+                "20-physical-details.png",
                 "model.physical",
-                "展示区",
-                "物理背景说明",
-                "实验室 · 模型",
-                "模型 A 关联「光子晶体 / 量子点耦合」，解释 α 如何影响物理系统行为。",
-                selector=".physical-note",
+                "Collapsible",
+                "Physical background (expanded)",
+                "Lab · Model",
+                "Expand the model details block under the setup drawer for physical context and analytic notes.",
+                selector=".lab-details[open]",
             )
 
-            shot(page, "17-slider-alpha", selector="#alpha")
+            shot(page, "21-slider-alpha", selector="#alpha")
             add(
-                "17-slider-alpha.png",
+                "21-slider-alpha.png",
                 "alpha",
-                "滑块",
-                "α（耦合强度）",
-                "实验室 · 模型 A 参数",
-                "拖动 #alpha（范围约 -1.5～1.5）；右侧数值实时更新，A(x) 与谱联动。",
+                "Slider",
+                "α (coupling strength)",
+                "Lab · Model A parameters",
+                "Drag #alpha (approx. −1.5…1.5); numeric field syncs; A(x) and spectrum update live.",
                 selector="#alpha",
             )
 
-            shot(page, "18-slider-lambda", selector="#lambda")
+            shot(page, "22-slider-lambda", selector="#lambda")
             add(
-                "18-slider-lambda.png",
+                "22-slider-lambda.png",
                 "lambda",
-                "滑块",
-                "λ 猜测值（残差）",
-                "实验室 · 残差",
-                "拖动 #lambda（-1～4）；改变 r(x,λ) 显示，不改变 A(x) 本身。",
+                "Slider",
+                "λ guess (residual probe)",
+                "Lab · Residual",
+                "Drag #lambda (−1…4); changes displayed r(x, λ) without changing A(x).",
                 selector="#lambda",
             )
 
-            shot(page, "19-checkbox-freeze-off", selector=".pitfall-toggle")
+            shot(page, "23-freeze-off", selector=".lab-freeze-row")
             add(
-                "19-checkbox-freeze-off.png",
+                "23-freeze-off.png",
                 "freeze",
-                "复选框",
-                "误区：冻结当前 x 处的 A（未勾选）",
-                "实验室 · Pitfall",
-                "勾选 #freeze 后冻结 A(x₀) 并显示对比热图/谱；再次单击取消。",
-                selector=".pitfall-toggle",
+                "Checkbox",
+                "Pitfall: freeze A at current x (unchecked)",
+                "Lab · Pitfall",
+                "Check #freeze to freeze A(x₀), show frozen heatmap/spectrum, and highlight the pitfall.",
+                selector=".lab-freeze-row",
             )
 
             page.check("#freeze")
-            page.wait_for_timeout(400)
-            shot(page, "20-checkbox-freeze-on", selector=".pitfall-toggle")
+            page.wait_for_timeout(450)
+            shot(page, "24-freeze-on", selector=".lab-freeze-row.is-active")
             add(
-                "20-checkbox-freeze-on.png",
+                "24-freeze-on.png",
                 "freeze.checked",
-                "复选框 + 徽章",
-                "误区：冻结（已勾选）",
-                "实验室 · Pitfall",
-                "显示红色 Pitfall 徽章与 tooltip；右侧出现 A(x₀) 热图与冻结谱。",
-                selector=".pitfall-toggle",
+                "Checkbox + badge",
+                "Pitfall: freeze A (checked)",
+                "Lab · Pitfall",
+                "Shows inline ⚠ badge and frozen-spectrum column; reminds that linear EVP ≠ NEPv.",
+                selector=".lab-freeze-row.is-active",
             )
             page.uncheck("#freeze")
             page.wait_for_timeout(300)
 
-            shot(page, "21-residual-metric", selector=".playground-grid aside .card:has(.metric)")
+            shot(page, "25-status-card", selector=".lab-status-card")
             add(
-                "21-residual-metric.png",
+                "25-status-card.png",
                 "residual.metric",
-                "展示区",
-                "残差 r(x, λ) 数值",
-                "实验室 · 残差",
-                "只读：当前 x 与 λ 下的归一化残差（六位小数）。",
-                selector=".playground-grid aside .card:has(.metric)",
+                "Display",
+                "Relative & absolute residual",
+                "Lab · Residual",
+                "Read-only metrics; color hints for low/high residual; Reset all restores defaults.",
+                selector=".lab-status-card",
             )
 
-            shot(page, "22-iteration-lab", selector=".iteration-lab")
-            add(
-                "22-iteration-lab.png",
-                "iteration.lab",
-                "区域",
-                "迭代实验室",
-                "实验室 · 迭代",
-                "含三个按钮：播放、单步、重置为参考初值。",
-                selector=".iteration-lab",
-            )
-
-            for fn, sel, cid, label, action in [
-                (
-                    "23-btn-iteration-play",
-                    ".iteration-lab button:nth-of-type(1)",
-                    "iteration.play",
-                    "播放",
-                    "从 PRD 参考初值自动迭代（最多 200 步）并更新 x 与 r。",
-                ),
-                (
-                    "24-btn-iteration-step",
-                    ".iteration-lab button:nth-of-type(2)",
-                    "iteration.step",
-                    "单步",
-                    "执行一步不动点型迭代；未收敛达上限后该按钮禁用。",
-                ),
-                (
-                    "25-btn-iteration-reset",
-                    ".iteration-lab button:nth-of-type(3)",
-                    "iteration.resetRef",
-                    "重置为参考初值",
-                    "恢复基线 x 与步数 k=0，清除未收敛警告。",
-                ),
-            ]:
-                shot(page, fn, selector=sel)
-                add(f"{fn}.png", cid, "按钮", label, "实验室 · 迭代", action, selector=sel)
-
-            shot(page, "26-vector-compass", selector=".vector-compass")
+            scroll_to(page, "#lab-compass")
+            shot(page, "26-vector-compass", selector="#lab-compass .vector-compass")
             add(
                 "26-vector-compass.png",
                 "compass.svg",
-                "拖拽区",
-                "向量罗盘（||x||=1）",
-                "实验室 · 向量",
-                "在 SVG 圆盘上拖动蓝色端点设置 x 方向；拖出圆外会投影并 toast 提示归一化。",
-                selector=".vector-compass",
+                "Drag surface",
+                "Vector compass (||x|| = 1)",
+                "Lab · Vector",
+                "Drag the blue handle on the unit circle; out-of-circle drags project back with a toast.",
+                selector="#lab-compass .vector-compass",
             )
 
-            shot(page, "27-heatmap-spectrum", selector=".playground-grid > main")
+            scroll_to(page, "#lab-observe")
+            shot(page, "27-observe-zone", selector="#lab-observe")
             add(
-                "27-heatmap-spectrum.png",
-                "viz.main",
-                "展示区",
-                "热图与瞬时谱",
-                "实验室 · 可视化",
-                "只读：A(x) 热图、特征值条形图；Pitfall 开启时出现冻结对比列。",
-                selector=".playground-grid > main",
+                "27-observe-zone.png",
+                "viz.observe",
+                "Display",
+                "Heatmap & instantaneous spectrum",
+                "Lab · Visualization",
+                "A(x) heatmap and eigenvalue bars; extra column when freeze pitfall is on.",
+                selector="#lab-observe",
             )
 
-            shot(page, "27b-polar-plot", selector=".polar-plot")
+            scroll_to(page, "#lab-polar")
+            shot(page, "28-polar-plot", selector="#lab-polar .polar-plot")
             add(
-                "27b-polar-plot.png",
+                "28-polar-plot.png",
                 "polar-plot",
-                "展示区",
-                "残差极坐标图 r(θ)",
-                "实验室 · 可视化",
-                "显示残差在单位圆上的分布，红色点标记 θ=0 方向；实时响应参数变化。",
-                selector=".polar-plot",
+                "Display",
+                "Polar residual plot r(θ)",
+                "Lab · Visualization",
+                "Residual on the unit circle; red marker at θ = 0; updates with parameters.",
+                selector="#lab-polar .polar-plot",
             )
 
-            shot(page, "27c-ai-tutor", selector=".ai-tutor")
+            scroll_to(page, "#lab-iteration")
+            shot(page, "29-iteration-lab", selector="#lab-iteration .iteration-lab")
             add(
-                "27c-ai-tutor.png",
-                "ai-tutor",
-                "侧边栏",
-                "AI 数学助教（AI-assisted, human-verified）",
-                "实验室 · AI",
-                "右侧固定侧边栏：实时显示残差、λ、α 等状态；支持自然语言提问，AI 返回基于当前参数的收敛建议与误区解释；响应由规则模板生成，人工核验通过。",
-                selector=".ai-tutor",
+                "29-iteration-lab.png",
+                "iteration.lab",
+                "Region",
+                "Iteration lab",
+                "Lab · Iteration",
+                "Mode selector, Play, Step, Reset far, Reset to reference; convergence summary below.",
+                selector="#lab-iteration .iteration-lab",
             )
 
-            # Model B + x3
+            shot(page, "30-iter-mode", selector="#iter-mode")
+            add(
+                "30-iter-mode.png",
+                "iter-mode",
+                "Dropdown",
+                "Eigenvalue pick mode",
+                "Lab · Iteration",
+                "Choose max / min / closest eigenvalue for the fixed-point map.",
+                selector="#iter-mode",
+            )
+
+            iter_buttons = [
+                (
+                    "31-btn-play",
+                    ".iteration-lab .iteration-btn-group--primary button:nth-of-type(1)",
+                    "iteration.play",
+                    "Play",
+                    "Auto-iterate from the PRD reference initial guess (up to 200 steps).",
+                ),
+                (
+                    "32-btn-step",
+                    ".iteration-lab .iteration-btn-group--primary button:nth-of-type(2)",
+                    "iteration.step",
+                    "Step",
+                    "One fixed-point step; disabled after non-convergence limit.",
+                ),
+                (
+                    "33-btn-reset-far",
+                    ".iteration-lab .iteration-btn-group--secondary button:nth-of-type(1)",
+                    "iteration.resetFar",
+                    "Reset (far)",
+                    "Jump to a deliberately poor initial vector to demonstrate sensitivity.",
+                ),
+                (
+                    "34-btn-reset-ref",
+                    ".iteration-lab .iteration-btn-group--secondary button:nth-of-type(2)",
+                    "iteration.resetRef",
+                    "Reset to reference",
+                    "Restore baseline x and k = 0; clears non-convergence warning.",
+                ),
+            ]
+            for fn, sel, cid, label, action in iter_buttons:
+                shot(page, fn, selector=sel)
+                add(f"{fn}.png", cid, "Button", label, "Lab · Iteration", action, selector=sel)
+
+            # Model B
             page.select_option("#model-select", "diagonal-3x3")
             page.wait_for_timeout(500)
-            shot(page, "28-model-select-b", selector="#model-select")
+            shot(page, "35-model-select-b", selector="#model-select")
             add(
-                "28-model-select-b.png",
+                "35-model-select-b.png",
                 "model-select.b",
-                "下拉框",
-                "玩具模型（当前：模型 B）",
-                "实验室 · 模型",
-                "选择「模型 B — 对角缩放（3×3）」；显示 β₁/β₂/β₃ 与 x₃ 滑块。",
+                "Dropdown",
+                "Toy model (Model B — diagonal 3×3)",
+                "Lab · Model",
+                "Switch to Model B; exposes β₁–β₃ sliders and x₃ control.",
                 selector="#model-select",
             )
 
             for fn, key, label in [
-                ("29-slider-beta1", "beta1", "β₁"),
-                ("30-slider-beta2", "beta2", "β₂"),
-                ("31-slider-beta3", "beta3", "β₃"),
+                ("36-slider-beta1", "beta1", "β₁"),
+                ("37-slider-beta2", "beta2", "β₂"),
+                ("38-slider-beta3", "beta3", "β₃"),
             ]:
                 shot(page, fn, selector=f"#{key}")
                 add(
                     f"{fn}.png",
                     key,
-                    "滑块",
+                    "Slider",
                     label,
-                    "实验室 · 模型 B 参数",
-                    f"拖动 #{key} 改变对角缩放强度；特征值即对角元。",
+                    "Lab · Model B parameters",
+                    f"Adjust #{key} (diagonal scaling); eigenvalues track diagonal entries.",
                     selector=f"#{key}",
                 )
 
-            shot(page, "32-slider-x3", selector="#x3")
+            shot(page, "39-slider-x3", selector="#x3")
             add(
-                "32-slider-x3.png",
+                "39-slider-x3.png",
                 "x3",
-                "滑块",
-                "x₃（单位球面）",
-                "实验室 · 向量（3D）",
-                "拖动 #x3 调节第三分量；与罗盘 x₁,x₂ 共同满足 ||x||=1。",
+                "Slider",
+                "x₃ (unit sphere)",
+                "Lab · Vector (3D)",
+                "Set third component; works with compass x₁, x₂ under ||x|| = 1.",
                 selector="#x3",
             )
 
-            # Pitfalls section
-            scroll_to(page, "#pitfalls")
-            shot(page, "33-section-pitfalls", selector="#pitfalls")
+            page.select_option("#model-select", "rank-one-2x2")
+            page.wait_for_timeout(400)
+
+            # --- AI Tutor (full-width below lab) ---
+            scroll_to(page, "#ai-tutor")
+            shot(page, "40-ai-tutor", selector="#ai-tutor .ai-tutor--centered")
             add(
-                "33-section-pitfalls.png",
+                "40-ai-tutor.png",
+                "ai-tutor",
+                "Region",
+                "AI Math Tutor",
+                "AI Tutor",
+                "Status chips, preset questions, and compose row; rule-based answers grounded in current r, λ, α, freeze, and iteration state.",
+                selector="#ai-tutor .ai-tutor--centered",
+            )
+
+            shot(page, "41-ai-presets", selector=".ai-presets")
+            add(
+                "41-ai-presets.png",
+                "ai.presets",
+                "Buttons",
+                "Preset questions",
+                "AI Tutor",
+                "One-click prompts (e.g. why not converging, explain freeze pitfall).",
+                selector=".ai-presets",
+            )
+
+            # --- Pitfalls ---
+            scroll_to(page, "#pitfalls")
+            shot(page, "42-section-pitfalls", selector="#pitfalls")
+            add(
+                "42-section-pitfalls.png",
                 "section.pitfalls",
-                "展示区",
-                "常见误区与 FAQ",
-                "误区",
-                "只读：冻结 A 说明、尺度/NEP/复特征值等条目，无按钮。",
+                "Region",
+                "Pitfalls & FAQ",
+                "Pitfalls",
+                "Horizontal layout: main pitfall card (freeze A) and FAQ grid; Try pitfall jumps to lab with freeze on.",
                 selector="#pitfalls",
             )
 
-            # Footer
+            # --- References (collapsible) ---
+            scroll_to(page, "#references")
+            shot(page, "43-references-collapsed", selector="#references .refs-collapsible")
+            add(
+                "43-references-collapsed.png",
+                "references.collapsed",
+                "Collapsible",
+                "References (collapsed)",
+                "References",
+                "Click summary to expand bibliography and teaching notes.",
+                selector="#references .refs-collapsible",
+            )
+            open_details(page, "#references .refs-collapsible")
+            shot(page, "44-references-open", selector="#references .refs-collapsible[open]")
+            add(
+                "44-references-open.png",
+                "references.open",
+                "Collapsible",
+                "References (expanded)",
+                "References",
+                "Numbered citation list and intro paragraph.",
+                selector="#references .refs-collapsible[open]",
+            )
+
             page.evaluate("window.scrollTo(0, document.body.scrollHeight)")
             page.wait_for_timeout(300)
-            shot(page, "34-footer", selector="footer")
+            shot(page, "45-footer", selector="footer")
             add(
-                "34-footer.png",
+                "45-footer.png",
                 "footer",
-                "展示区",
-                "页脚免责声明",
-                "页脚",
-                "只读：教学演示声明。",
+                "Display",
+                "Footer disclaimer",
+                "Footer",
+                "Read-only teaching-demo disclaimer.",
                 selector="footer",
             )
 
-            # Mobile viewport (≤375px) — numeric inputs visible per index.css
+            # --- Mobile ---
             page.set_viewport_size({"width": 375, "height": 812})
             page.goto(BASE_URL)
             page.wait_for_load_state("networkidle")
-            page.select_option("#locale-select", "zh-CN")
+            page.select_option("#locale-select", "en")
             page.select_option("#model-select", "rank-one-2x2")
             scroll_to(page, "#playground")
-            page.wait_for_timeout(400)
+            page.wait_for_timeout(450)
 
-            shot(page, "35-numeric-x1", selector=".compass-numeric label:first-of-type")
+            shot(page, "46-mobile-numeric", selector=".compass-numeric.mobile-numeric")
             add(
-                "35-numeric-x1.png",
-                "compass.numericX1",
-                "数字输入",
-                "x₁（数值）",
-                "实验室 · 向量（移动端）",
-                "在宽度 ≤375px 时显示；输入 x₁ 后自动归一化，范围 [-1,1]。",
-                selector=".compass-numeric label:first-of-type",
+                "46-mobile-numeric.png",
+                "compass.numeric",
+                "Number inputs",
+                "x₁ / x₂ numeric fields (mobile)",
+                "Lab · Mobile",
+                "Shown at viewport ≤ 375px; edits normalize x to the unit sphere.",
+                selector=".compass-numeric.mobile-numeric",
             )
 
-            shot(page, "36-numeric-x2", selector=".compass-numeric label:last-of-type")
+            page.screenshot(path=str(OUT_DIR / "47-mobile-playground.png"), full_page=False)
             add(
-                "36-numeric-x2.png",
-                "compass.numericX2",
-                "数字输入",
-                "x₂（数值）",
-                "实验室 · 向量（移动端）",
-                "与罗盘拖拽、x₃ 滑块（模型 B）共同决定单位球面上的 x。",
-                selector=".compass-numeric label:last-of-type",
-            )
-
-            page.screenshot(path=str(OUT_DIR / "37-mobile-playground.png"))
-            add(
-                "37-mobile-playground.png",
+                "47-mobile-playground.png",
                 "viewport.mobile",
-                "视口",
-                "移动端实验室（375px）",
-                "移动端",
-                "触控拖动罗盘；x₁/x₂ 数值输入与可横向滑动热图；谱图纵向堆叠。",
+                "Viewport",
+                "Mobile lab (375px)",
+                "Mobile",
+                "Touch-friendly compass, stacked observe zone, drawer setup controls.",
             )
 
             browser.close()
