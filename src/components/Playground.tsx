@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { useI18n } from '../i18n';
 import { registerPlaygroundActions } from '../context/playgroundActions';
 import { getModelCopy, getParamLabel } from '../i18n/modelCopy';
-import { absoluteResidual, evaluateNepv, isSingularX, residual, RESIDUAL_FORMULA_PLAIN } from '../math/nepv';
+import { absoluteResidual, evaluateNepv, isSingularX } from '../math/nepv';
 import { residualAtTheta } from '../math/polar';
 import { normalize, type Vec } from '../math/vector';
 import { models } from '../models';
@@ -32,6 +32,7 @@ export function Playground() {
   const [iterK, setIterK] = useState(0);
   const [iterNotConv, setIterNotConv] = useState(false);
   const [trajectory, setTrajectory] = useState<Vec[]>([]);
+  const [residualFlash, setResidualFlash] = useState(false);
 
   const switchModel = (m: ToyModel, keepAngle = true) => {
     setModelId(m.id);
@@ -158,6 +159,13 @@ export function Playground() {
     frozenLinearAtX.residual < 0.01 &&
     state.residual > 0.05;
 
+  useEffect(() => {
+    if (state?.residual == null) return;
+    setResidualFlash(true);
+    const id = window.setTimeout(() => setResidualFlash(false), 550);
+    return () => window.clearTimeout(id);
+  }, [state?.residual]);
+
   return (
     <section id="playground">
       <div className="wide playground-wrap">
@@ -175,9 +183,201 @@ export function Playground() {
           </p>
         )}
 
-        <div className="playground-grid">
-          <aside className={singular ? 'controls-disabled' : ''}>
-            <div className="card">
+        <p className="lab-flow-hint" role="doc-subtitle">
+          {t.playground.labFlow}
+        </p>
+
+        <div className="lab-shell">
+          <div className={`lab-content ${freezeA ? 'pitfall-active' : ''}`}>
+            <div className="lab-experiments-grid">
+            <section className="lab-zone lab-zone-compass" id="lab-compass">
+              <header className="lab-zone-head">
+                <span className="lab-step-num" aria-hidden>
+                  1
+                </span>
+                <div>
+                  <h3>{t.playground.stage1}</h3>
+                  <p className="lab-zone-lead">{t.playground.exploreHint}</p>
+                </div>
+              </header>
+              <div className="lab-compass-split">
+                <div className="lab-compass-main lab-compass-stage">
+                  {model.dim === 2 ? (
+                    <VectorCompass
+                      x={xNorm}
+                      disabled={singular}
+                      onChange={(v) => setX(v)}
+                      dim={2}
+                      trajectory={trajectory}
+                      showAxes
+                      size={220}
+                    />
+                  ) : (
+                    <div className="lab-compass-3d">
+                      <VectorCompass
+                        x={xNorm}
+                        disabled={singular}
+                        onChange={(v) => setX(normalize([v[0], v[1], xNorm[2] ?? 0]))}
+                        dim={3}
+                        showAxes
+                        size={220}
+                      />
+                      <div className="lab-input-block">
+                        <label htmlFor="x3">{t.playground.x3Label}</label>
+                        <input
+                          id="x3"
+                          type="range"
+                          disabled={singular}
+                          min={-1}
+                          max={1}
+                          step={0.02}
+                          value={xNorm[2] ?? 0}
+                          onChange={(e) => setX3(parseFloat(e.target.value))}
+                        />
+                      </div>
+                    </div>
+                  )}
+                </div>
+                <aside className="lab-compass-aside" aria-label={t.playground.stage1}>
+                  <p className="zone-guide">{t.playground.exploreHint}</p>
+                  <div className="param-chip-row">
+                    <div className="param-chip">
+                      <span className="param-chip-label">λ</span>
+                      <strong className="param-chip-value">{lambdaGuess.toFixed(4)}</strong>
+                    </div>
+                    {state && (
+                      <div className="param-chip">
+                        <span className="param-chip-label">r_rel</span>
+                        <strong
+                          className={`param-chip-value ${residualFlash ? 'value-flash' : ''}`}
+                        >
+                          {state.residual.toFixed(4)}
+                        </strong>
+                      </div>
+                    )}
+                  </div>
+                </aside>
+              </div>
+            </section>
+
+            {A && state && (
+              <section className="lab-zone lab-zone-observe" id="lab-observe">
+                <header className="lab-zone-head">
+                  <span className="lab-step-num" aria-hidden>
+                    2
+                  </span>
+                  <div>
+                    <h3>{t.playground.sectionObserve}</h3>
+                    <p className="lab-zone-lead spectrum-hint-banner">{t.playground.spectrumHint}</p>
+                  </div>
+                </header>
+                <div className="lab-observe-grid">
+                  <MatrixHeatmap A={A} title={t.playground.heatmapMoving} />
+                  {freezeA && Afrozen && (
+                    <MatrixHeatmap A={Afrozen} title={t.playground.heatmapFrozen} />
+                  )}
+                  <div
+                    className={`lab-spectrum-col${freezeA ? ' lab-spectrum-col--pitfall' : ''}`}
+                  >
+                    <SpectrumChart
+                      eigenvalues={state.spectrum.eigenvalues}
+                      sensitive={state.spectrum.sensitive}
+                      label={t.playground.spectrumCurrent}
+                    />
+                    {freezeA && frozenLinearAtX && (
+                      <SpectrumChart
+                        eigenvalues={frozenLinearAtX.spectrum.eigenvalues}
+                        sensitive={frozenLinearAtX.spectrum.sensitive}
+                        frozen
+                        label={t.playground.spectrumFrozen}
+                      />
+                    )}
+                  </div>
+                </div>
+                {freezeA && frozenLinearAtX && (
+                  <div className="pitfall-compare-strip">
+                    <span>
+                      {t.playground.pitfallFrozenResidual}:{' '}
+                      <strong>{frozenLinearAtX.residual.toFixed(4)}</strong>
+                    </span>
+                    <span>
+                      {t.playground.pitfallTrueResidual}:{' '}
+                      <strong
+                        className={state.residual > 0.05 ? 'residual-high' : 'residual-low'}
+                      >
+                        {state.residual.toFixed(4)}
+                      </strong>
+                    </span>
+                    {pitfallMismatch && (
+                      <span className="pitfall-highlight" role="alert">
+                        {t.playground.pitfallHighlight}
+                      </span>
+                    )}
+                  </div>
+                )}
+              </section>
+            )}
+
+            {!singular && A && (
+              <section className="lab-zone lab-zone-polar" id="lab-polar">
+                <header className="lab-zone-head">
+                  <span className="lab-step-num" aria-hidden>
+                    3
+                  </span>
+                  <div>
+                    <h3>{t.playground.polarTitle}</h3>
+                    <p className="lab-zone-lead">{t.playground.polarCaption}</p>
+                  </div>
+                </header>
+                <PolarPlot
+                  embedded
+                  model={model}
+                  params={params}
+                  xCurrent={xNorm}
+                  lambdaGuess={lambdaGuess}
+                  onSelectTheta={handlePolarSelect}
+                />
+              </section>
+            )}
+
+            {!singular && (
+              <section className="lab-zone lab-zone-iteration" id="lab-iteration">
+                <header className="lab-zone-head">
+                  <span className="lab-step-num" aria-hidden>
+                    4
+                  </span>
+                  <div>
+                    <h3>{t.iteration.title}</h3>
+                    <p className="lab-zone-lead">{t.playground.stage2}</p>
+                  </div>
+                </header>
+                <IterationLab
+                  embedded
+                  model={model}
+                  params={params}
+                  xCurrent={xNorm}
+                  lambdaGuess={lambdaGuess}
+                  onApplyX={(v) => setX(v)}
+                  onApplyLambda={setLambdaGuess}
+                  onTrajectoryChange={setTrajectory}
+                  onIterationMeta={({ k, notConverged }) => {
+                    setIterK(k);
+                    setIterNotConv(notConverged);
+                  }}
+                />
+              </section>
+            )}
+
+            </div>
+            <p className="singularity-note lab-singularity-note">{modelCopy.singularityNote}</p>
+          </div>
+
+          <details className="lab-sidebar-drawer" open>
+            <summary>{t.playground.sectionSetup}</summary>
+            <div className="lab-sidebar-drawer-body">
+          <aside className={`lab-sidebar lab-sidebar--right ${singular ? 'controls-disabled' : ''}`}>
+            <div className="lab-panel">
+              <p className="zone-guide lab-panel-guide">{t.playground.lead}</p>
               <label htmlFor="model-select">{t.playground.toyModel}</label>
               <select
                 id="model-select"
@@ -195,135 +395,112 @@ export function Playground() {
                 ))}
               </select>
               <p className="model-desc">{modelCopy.description}</p>
-              {modelCopy.physical && <p className="physical-note">{modelCopy.physical}</p>}
-              {modelCopy.analyticNote && (
-                <p className="control-value">{modelCopy.analyticNote}</p>
-              )}
-              {modelCopy.refs && <p className="refs-note">{modelCopy.refs}</p>}
-            </div>
 
-            {model.paramKeys.map((key) => {
-              const meta = model.paramMeta[key];
-              if (!meta) return null;
-              return (
-                <div className="control-row" key={key}>
-                  <label htmlFor={key}>{getParamLabel(t, model.id, key)}</label>
-                  <input
-                    id={key}
-                    type="range"
-                    disabled={singular}
-                    min={meta.min}
-                    max={meta.max}
-                    step={meta.step}
-                    value={params[key] ?? 0}
-                    onChange={(e) =>
-                      setParams((p) => ({ ...p, [key]: parseFloat(e.target.value) }))
-                    }
-                  />
-                  <input
-                    type="number"
-                    className="param-number"
-                    step={meta.step}
-                    min={meta.min}
-                    max={meta.max}
-                    disabled={singular}
-                    value={Number((params[key] ?? 0).toFixed(4))}
-                    onChange={(e) =>
-                      setParams((p) => ({ ...p, [key]: parseFloat(e.target.value) }))
-                    }
-                  />
-                </div>
-              );
-            })}
+              <div className="lab-param-grid">
+                {model.paramKeys.map((key) => {
+                  const meta = model.paramMeta[key];
+                  if (!meta) return null;
+                  return (
+                    <div className="lab-param-item" key={key}>
+                      <label htmlFor={key}>{getParamLabel(t, model.id, key)}</label>
+                      <input
+                        id={key}
+                        type="range"
+                        disabled={singular}
+                        min={meta.min}
+                        max={meta.max}
+                        step={meta.step}
+                        value={params[key] ?? 0}
+                        onChange={(e) =>
+                          setParams((p) => ({ ...p, [key]: parseFloat(e.target.value) }))
+                        }
+                      />
+                      <input
+                        type="number"
+                        className="param-number"
+                        step={meta.step}
+                        min={meta.min}
+                        max={meta.max}
+                        disabled={singular}
+                        value={Number((params[key] ?? 0).toFixed(4))}
+                        onChange={(e) =>
+                          setParams((p) => ({ ...p, [key]: parseFloat(e.target.value) }))
+                        }
+                      />
+                    </div>
+                  );
+                })}
+              </div>
 
-            <div className="control-row">
-              <label htmlFor="lambda">{t.playground.lambdaGuessLabel}</label>
-              <p className="control-hint">{t.playground.lambdaGuessHint}</p>
-              <input
-                id="lambda"
-                type="range"
-                disabled={singular}
-                min={-1}
-                max={4}
-                step={0.01}
-                value={lambdaGuess}
-                onChange={(e) => setLambdaGuess(parseFloat(e.target.value))}
-              />
-              <input
-                type="number"
-                className="param-number"
-                step={0.01}
-                disabled={singular}
-                value={Number(lambdaGuess.toFixed(4))}
-                onChange={(e) => setLambdaGuess(parseFloat(e.target.value))}
-              />
-            </div>
+              <div className="lab-input-block">
+                <label htmlFor="lambda">{t.playground.lambdaGuessLabel}</label>
+                <input
+                  id="lambda"
+                  type="range"
+                  disabled={singular}
+                  min={-1}
+                  max={4}
+                  step={0.01}
+                  value={lambdaGuess}
+                  onChange={(e) => setLambdaGuess(parseFloat(e.target.value))}
+                />
+                <input
+                  type="number"
+                  className="param-number"
+                  step={0.01}
+                  disabled={singular}
+                  value={Number(lambdaGuess.toFixed(4))}
+                  onChange={(e) => setLambdaGuess(parseFloat(e.target.value))}
+                />
+                <p className="control-hint">{t.playground.lambdaGuessHint}</p>
+              </div>
 
-            <div className={`toggle-row pitfall-toggle ${freezeA ? 'is-active' : ''}`}>
-              <input
-                id="freeze"
-                type="checkbox"
-                checked={freezeA}
-                disabled={singular}
-                onChange={toggleFreeze}
-              />
-              <label htmlFor="freeze">{t.playground.freezePitfall}</label>
+              <div className={`lab-freeze-row ${freezeA ? 'is-active' : ''}`}>
+                <input
+                  id="freeze"
+                  type="checkbox"
+                  checked={freezeA}
+                  disabled={singular}
+                  onChange={toggleFreeze}
+                />
+                <label htmlFor="freeze">{t.playground.freezePitfall}</label>
+              </div>
               {freezeA && (
-                <span className="pitfall-badge" title={t.playground.pitfallTooltip}>
-                  ?? {t.playground.pitfallBadge}
-                </span>
+                <p className="pitfall-badge-inline" title={t.playground.pitfallTooltip}>
+                  ⚠ {t.playground.pitfallBadge}
+                </p>
               )}
-              <span className="pitfall-tooltip">{t.playground.pitfallTooltip}</span>
             </div>
 
-            {freezeA && frozenLinearAtX && state && (
-              <div className="card pitfall-compare-card">
-                <h4>{t.playground.pitfallCompareTitle}</h4>
-                <p>
-                  {t.playground.pitfallFrozenResidual}:{' '}
-                  <strong>{frozenLinearAtX.residual.toFixed(4)}</strong>
-                </p>
-                <p>
-                  {t.playground.pitfallTrueResidual}:{' '}
-                  <strong className={state.residual > 0.05 ? 'residual-high' : 'residual-low'}>
-                    {state.residual.toFixed(4)}
-                  </strong>
-                </p>
-                <p className="pitfall-linear-note">{t.playground.pitfallLinearNote}</p>
-                {pitfallMismatch && (
-                  <p className="pitfall-highlight" role="alert">
-                    {t.playground.pitfallHighlight}
-                  </p>
-                )}
-              </div>
-            )}
-
-            <div className="card">
-              <label>{t.playground.residualRelLabel}</label>
+            <div className="lab-status-card">
+              <span className="lab-status-label">{t.playground.residualRelLabel}</span>
               <div
-                className={`metric ${state && state.residual < 0.01 ? 'residual-low' : state && state.residual > 0.1 ? 'residual-high' : ''}`}
+                className={`lab-status-value ${residualFlash ? 'value-flash' : ''} ${state && state.residual < 0.01 ? 'residual-low' : state && state.residual > 0.1 ? 'residual-high' : ''}`}
               >
-                {state ? state.residual.toFixed(4) : '?'}
+                {state ? state.residual.toFixed(4) : '—'}
               </div>
-              <label>{t.playground.residualAbsLabel}</label>
-              <div className="control-value">{rAbs != null ? rAbs.toFixed(4) : '?'}</div>
-              <p className="residual-formula-foot">{RESIDUAL_FORMULA_PLAIN}</p>
+              <span className="lab-status-sub">
+                {t.playground.residualAbsLabel}: {rAbs != null ? rAbs.toFixed(4) : '—'}
+              </span>
               <p className="control-hint">{t.playground.residualZeroHint}</p>
               <div className="btn-row">
-                <button type="button" onClick={() => resetAll()}>
+                <button type="button" className="btn-secondary" onClick={() => resetAll()}>
                   {t.playground.resetAll}
                 </button>
                 <button
                   type="button"
+                  className="btn-secondary"
                   onClick={() => {
-                    const ex =
-                      model.id === 'rank-one-2x2'
-                        ? { alpha: 0.4, x: [0.92, 0.39] as Vec }
-                        : model.id === 'nonsymmetric-2x2'
-                          ? { beta: 1.0, a: 0.8, b: 0.8, c: 0.2, x: [0.7, 0.71] as Vec }
-                          : { alpha: 0.5, x: [0.707, 0.707] as Vec };
-                    setParams((p) => ({ ...p, ...ex }));
-                    if (ex.x) setX(normalize(ex.x));
+                    if (model.id === 'rank-one-2x2') {
+                      setParams((p) => ({ ...p, alpha: 0.4 }));
+                      setX(normalize([0.92, 0.39]));
+                    } else if (model.id === 'nonsymmetric-2x2') {
+                      setParams((p) => ({ ...p, beta: 1.0, a: 0.8, b: 0.8, c: 0.2 }));
+                      setX(normalize([0.7, 0.71]));
+                    } else {
+                      setParams((p) => ({ ...p, alpha: 0.5 }));
+                      setX(normalize([0.707, 0.707]));
+                    }
                   }}
                 >
                   {t.playground.loadExampleParams}
@@ -331,99 +508,21 @@ export function Playground() {
               </div>
             </div>
 
-            {!singular && (
-              <IterationLab
-                model={model}
-                params={params}
-                xCurrent={xNorm}
-                lambdaGuess={lambdaGuess}
-                onApplyX={(v) => setX(v)}
-                onApplyLambda={setLambdaGuess}
-                onTrajectoryChange={setTrajectory}
-                onIterationMeta={({ k, notConverged }) => {
-                  setIterK(k);
-                  setIterNotConv(notConverged);
-                }}
-              />
+            {modelCopy.physical && (
+              <details className="lab-details">
+                <summary>{t.playground.toyModel}</summary>
+                <p className="physical-note">{modelCopy.physical}</p>
+                {modelCopy.analyticNote && <p className="control-value">{modelCopy.analyticNote}</p>}
+                {modelCopy.refs && <p className="refs-note">{modelCopy.refs}</p>}
+              </details>
             )}
           </aside>
+            </div>
+          </details>
+        </div>
 
-          <main className={freezeA ? 'pitfall-active' : ''}>
-            {model.dim === 2 ? (
-              <VectorCompass
-                x={xNorm}
-                disabled={singular}
-                onChange={(v) => setX(v)}
-                dim={2}
-                trajectory={trajectory}
-                showAxes
-              />
-            ) : (
-              <>
-                <VectorCompass
-                  x={xNorm}
-                  disabled={singular}
-                  onChange={(v) => setX(normalize([v[0], v[1], xNorm[2] ?? 0]))}
-                  dim={3}
-                  showAxes
-                />
-                <div className="control-row">
-                  <label htmlFor="x3">{t.playground.x3Label}</label>
-                  <input
-                    id="x3"
-                    type="range"
-                    disabled={singular}
-                    min={-1}
-                    max={1}
-                    step={0.02}
-                    value={xNorm[2] ?? 0}
-                    onChange={(e) => setX3(parseFloat(e.target.value))}
-                  />
-                </div>
-              </>
-            )}
-
-            {A && state && (
-              <>
-                <p className="spectrum-hint-banner">{t.playground.spectrumHint}</p>
-                <div className="viz-row">
-                  <MatrixHeatmap A={A} title={t.playground.heatmapMoving} />
-                  {freezeA && Afrozen && (
-                    <MatrixHeatmap A={Afrozen} title={t.playground.heatmapFrozen} />
-                  )}
-                </div>
-                <div className="viz-row spectrum-stack">
-                  <SpectrumChart
-                    eigenvalues={state.spectrum.eigenvalues}
-                    sensitive={state.spectrum.sensitive}
-                    label={t.playground.spectrumCurrent}
-                  />
-                  {freezeA && frozenLinearAtX && (
-                    <SpectrumChart
-                      eigenvalues={frozenLinearAtX.spectrum.eigenvalues}
-                      sensitive={frozenLinearAtX.spectrum.sensitive}
-                      frozen
-                      label={t.playground.spectrumFrozen}
-                    />
-                  )}
-                </div>
-              </>
-            )}
-
-            {!singular && A && (
-              <PolarPlot
-                model={model}
-                params={params}
-                xCurrent={xNorm}
-                lambdaGuess={lambdaGuess}
-                onSelectTheta={handlePolarSelect}
-              />
-            )}
-
-            <p className="singularity-note">{modelCopy.singularityNote}</p>
-          </main>
-
-          <AIMathTutor state={aiState} />
+        <div id="ai-tutor" className="lab-ai-center">
+          <AIMathTutor layout="centered" state={aiState} />
         </div>
       </div>
     </section>

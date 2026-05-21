@@ -4,7 +4,7 @@ import { spectrum, type SpectrumResult } from './eigen';
 
 /** KaTeX / UI must match this definition (PRD §5.1). */
 export const RESIDUAL_FORMULA_TEX =
-  String.raw`r(x,\lambda)=\frac{\|A(x)x-\lambda x\|_2}{\|A(x)x\|_2+\|\lambda x\|_2}`;
+  String.raw`r(x,\lambda)=\frac{\left\lVert A(x)\,x-\lambda x\right\rVert_{2}}{\left\lVert A(x)\,x\right\rVert_{2}+\left\lVert \lambda x\right\rVert_{2}}`;
 
 export const RESIDUAL_FORMULA_PLAIN =
   'r(x,λ) = ||A(x)x - λx||_2 / (||A(x)x||_2 + ||λx||_2)';

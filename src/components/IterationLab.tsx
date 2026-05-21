@@ -24,6 +24,7 @@ interface Props {
   onApplyLambda?: (l: number) => void;
   onTrajectoryChange?: (path: Vec[]) => void;
   onIterationMeta?: (meta: { k: number; r: number; notConverged: boolean }) => void;
+  embedded?: boolean;
 }
 
 function prdBaselineX(model: ToyModel): Vec {
@@ -41,6 +42,7 @@ export function IterationLab({
   onApplyLambda,
   onTrajectoryChange,
   onIterationMeta,
+  embedded = false,
 }: Props) {
   const { t } = useI18n();
   const [k, setK] = useState(0);
@@ -49,6 +51,8 @@ export function IterationLab({
   const [notConverged, setNotConverged] = useState(false);
   const [mode, setMode] = useState<EigenPickMode>('max');
   const [trajectory, setTrajectory] = useState<Vec[]>([]);
+  const [busy, setBusy] = useState(false);
+  const [metricFlash, setMetricFlash] = useState(false);
 
   const buildA = useCallback(
     (x: Vec) => model.buildA(x, params),
@@ -70,6 +74,13 @@ export function IterationLab({
   useEffect(() => {
     syncCurrentResidual();
   }, [syncCurrentResidual]);
+
+  useEffect(() => {
+    if (r == null) return;
+    setMetricFlash(true);
+    const id = window.setTimeout(() => setMetricFlash(false), 550);
+    return () => window.clearTimeout(id);
+  }, [r]);
 
   const applySteps = (steps: IterationStepResult[], stoppedEarly: boolean) => {
     const last = steps[steps.length - 1];
@@ -117,18 +128,23 @@ export function IterationLab({
   };
 
   const runAuto = () => {
-    const x0 = trajectory[0] ?? xCurrent;
-    const { steps, stoppedEarly } = runIterationUntil(
-      x0,
-      buildA,
-      MAX_ITER_STEPS,
-      mode,
-      lambdaGuess,
-    );
-    applySteps(steps, stoppedEarly);
+    setBusy(true);
+    window.setTimeout(() => {
+      const x0 = trajectory[0] ?? xCurrent;
+      const { steps, stoppedEarly } = runIterationUntil(
+        x0,
+        buildA,
+        MAX_ITER_STEPS,
+        mode,
+        lambdaGuess,
+      );
+      applySteps(steps, stoppedEarly);
+      setBusy(false);
+    }, 0);
   };
 
   const stepOnce = () => {
+    setBusy(true);
     const { xNext, lambda: lNext, r: rNext, rAbs: rNextAbs } = iterationStep(
       xCurrent,
       buildA,
@@ -148,43 +164,113 @@ export function IterationLab({
       setNotConverged(true);
       onIterationMeta?.({ k: nk, r: rNext, notConverged: true });
     }
+    setBusy(false);
   };
 
   const alpha = params.alpha ?? params.beta ?? params.beta1 ?? 0;
   const Acur = buildA(xCurrent);
   const diag = convergenceDiagnostics(Acur, alpha);
 
-  return (
-    <div className="card iteration-lab">
-      <h3>{t.iteration.title}</h3>
-      <p className="iteration-scf-note">{t.iteration.scfNote}</p>
+  const statusClass =
+    r != null && r < 0.001
+      ? 'iter-status--ok'
+      : notConverged
+        ? 'iter-status--bad'
+        : k > 0
+          ? 'iter-status--run'
+          : '';
 
-      <div className="control-row">
-        <label htmlFor="iter-mode">{t.iteration.modeLabel}</label>
-        <select
-          id="iter-mode"
-          value={mode}
-          onChange={(e) => setMode(e.target.value as EigenPickMode)}
-        >
-          <option value="max">{t.iteration.modeMax}</option>
-          <option value="min">{t.iteration.modeMin}</option>
-          <option value="closest">{t.iteration.modeClosest}</option>
-        </select>
+  const statusLabel =
+    r != null && r < 0.001
+      ? t.iteration.convergedSummary
+      : notConverged
+        ? t.iteration.notConvergedSummary
+        : k > 0
+          ? t.iteration.inProgressSummary
+          : '—';
+
+  return (
+    <div className={`iteration-lab ${embedded ? 'iteration-lab--embedded' : ''}`}>
+      {!embedded && (
+        <>
+          <h3>{t.iteration.title}</h3>
+          <p className="iteration-scf-note">{t.iteration.scfNote}</p>
+        </>
+      )}
+
+      <div className="iteration-status-bar">
+        <div className={`iter-status-pill ${statusClass}`}>
+          <span className="iter-status-label">{statusLabel}</span>
+        </div>
+        <dl className="iter-metrics">
+          <div>
+            <dt>{t.iteration.stepLabel}</dt>
+            <dd>{k}</dd>
+          </div>
+          <div>
+            <dt>r_rel</dt>
+            <dd className={metricFlash ? 'value-flash' : ''}>
+              {r != null ? r.toFixed(4) : '—'}
+            </dd>
+          </div>
+          <div>
+            <dt>|r|_abs</dt>
+            <dd className={metricFlash ? 'value-flash' : ''}>
+              {rAbs != null ? rAbs.toFixed(4) : '—'}
+            </dd>
+          </div>
+          {trajectory.length > 1 && (
+            <div>
+              <dt>path</dt>
+              <dd>{trajectory.length}</dd>
+            </div>
+          )}
+        </dl>
       </div>
 
-      <div className="iteration-controls">
-        <button type="button" onClick={runAuto}>
-          {t.iteration.play}
-        </button>
-        <button type="button" onClick={stepOnce} disabled={notConverged}>
-          {t.iteration.step}
-        </button>
-        <button type="button" onClick={resetFar}>
-          {t.iteration.resetFar}
-        </button>
-        <button type="button" onClick={resetRef}>
-          {t.iteration.resetRef}
-        </button>
+      <div className="iteration-body">
+        <div className="iteration-col iteration-col-settings">
+          <label htmlFor="iter-mode">{t.iteration.modeLabel}</label>
+          <select
+            id="iter-mode"
+            value={mode}
+            onChange={(e) => setMode(e.target.value as EigenPickMode)}
+          >
+            <option value="max">{t.iteration.modeMax}</option>
+            <option value="min">{t.iteration.modeMin}</option>
+            <option value="closest">{t.iteration.modeClosest}</option>
+          </select>
+          {embedded && <p className="iteration-scf-note">{t.iteration.scfNote}</p>}
+        </div>
+
+        <div className="iteration-col iteration-col-actions">
+          <div className="iteration-btn-group iteration-btn-group--primary">
+            <button
+              type="button"
+              className={`btn-primary ${busy ? 'is-loading' : ''}`}
+              onClick={runAuto}
+              disabled={busy}
+            >
+              <span className="btn-label">{t.iteration.play}</span>
+            </button>
+            <button
+              type="button"
+              className={`btn-primary ${busy ? 'is-loading' : ''}`}
+              onClick={stepOnce}
+              disabled={notConverged || busy}
+            >
+              <span className="btn-label">{t.iteration.step}</span>
+            </button>
+          </div>
+          <div className="iteration-btn-group iteration-btn-group--secondary">
+            <button type="button" className="btn-secondary" onClick={resetFar}>
+              {t.iteration.resetFar}
+            </button>
+            <button type="button" className="btn-secondary" onClick={resetRef}>
+              {t.iteration.resetRef}
+            </button>
+          </div>
+        </div>
       </div>
 
       {diag.warn && (
@@ -197,24 +283,6 @@ export function IterationLab({
         <p className="iteration-warn" role="alert">
           {t.iteration.notConverged}
         </p>
-      )}
-
-      <p className="control-value">
-        {t.iteration.stepLabel} = {k}, r_rel = {r != null ? r.toFixed(4) : '—'},{' '}
-        |r|_abs = {rAbs != null ? rAbs.toFixed(4) : '—'}
-      </p>
-
-      {k > 0 && r != null && (
-        <div className="iteration-summary">
-          {r < 0.001
-            ? `${t.iteration.convergedSummary} (${k} steps, r_rel=${r.toFixed(4)})`
-            : notConverged
-              ? `${t.iteration.notConvergedSummary} (${k} steps)`
-              : `${t.iteration.inProgressSummary} (r_rel=${r.toFixed(4)})`}
-        </div>
-      )}
-      {trajectory.length > 1 && (
-        <p className="control-value">Trajectory points: {trajectory.length}</p>
       )}
     </div>
   );

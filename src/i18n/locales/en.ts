@@ -17,14 +17,14 @@ const en: Translations = {
   },
   hero: {
     tag: 'Teaching demo · n ≤ 4',
-    title: 'NEPv Lens',
+    title: 'Definition',
     lead:
       'Explore nonlinear eigenvalue problems where the operator depends on the eigenvector: changing x reshapes A(x).',
     footnote:
       'Vectors are shown on the unit sphere (||x|| = 1). This demo builds intuition only — it does not solve all NEPv instances.',
   },
   compare: {
-    title: 'Stage 0 — Linear warmup vs NEPv',
+    title: 'Linear warmup vs NEPv',
     nepDefinitionTitle: 'Consistent NEPv solution',
     nepDefinition:
       'A pair (λ, x) with x ≠ 0 is a solution when A(x)x = λx and x is an eigenvector of the operator A(x) itself — not merely of a frozen matrix.',
@@ -37,7 +37,7 @@ const en: Translations = {
     note: 'General problems F(λ,x)=0 can be broader than the form A(x)x=λx used here.',
   },
   playground: {
-    title: 'Stage 1–2 — Coupling compass & iteration lab',
+    title: 'Coupling compass & iteration lab',
     lead: 'Drag the compass, adjust λ guess, and compare true NEPv residuals with the freeze-A pitfall.',
     stage0: 'Concept',
     stage1: 'Compass lab',
@@ -77,6 +77,10 @@ const en: Translations = {
     polarLocalMin: '● local minimum',
     polarCurrent: '◆ current direction',
     polarClickHint: 'Click a minimum to move the compass and set λ to the best μᵢ.',
+    labFlow: 'Setup → Explore direction → Read A(x) → Scan r(θ) → Run SCF',
+    sectionSetup: 'Setup',
+    sectionObserve: 'Operator & spectrum',
+    exploreHint: 'Drag the needle: x sets the direction of the coupled problem.',
   },
   compass: {
     label: 'Vector compass (||x|| = 1)',
@@ -97,7 +101,7 @@ const en: Translations = {
     conjugatePair: 'conjugate pair',
   },
   iteration: {
-    title: 'Stage 2 — Iteration lab (SCF)',
+    title: 'Iteration lab (SCF)',
     scfNote:
       'Self-consistent field iteration: x_{k+1} = eigenvector of A(x_k) for the selected mode, then normalized.',
     modeLabel: 'Eigenvector pick',
@@ -119,7 +123,7 @@ const en: Translations = {
     diagWarn: 'Large α or small gap — convergence may fail. Try lowering α.',
   },
   pitfalls: {
-    title: 'Stage 4 — Pitfalls & FAQ',
+    title: 'Pitfalls & FAQ',
     freezeTitle: 'Freezing A(x) ≠ solving NEPv',
     freezeP1:
       'Picking x₀, freezing A(x₀), and solving a linear EVP is a common mistake — it decouples the operator from the eigenvector.',
@@ -145,6 +149,11 @@ const en: Translations = {
   ai: {
     title: 'AI Math Tutor',
     hint: 'State-aware teaching assistant (rule-based; API-ready).',
+    statusLabel: 'Current state',
+    presetsLabel: 'Common questions',
+    composeHint: 'State-aware teaching assistant (rule-based; API-ready).',
+    modeDynamic: 'Dynamic NEPv',
+    modeFrozen: 'Frozen A',
     responseLabel: 'Response',
     footnote: 'AI-assisted, human-verified. Replace askAI() with LLM API in production.',
     q1: 'Why is it not converging?',

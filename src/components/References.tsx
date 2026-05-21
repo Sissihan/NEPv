@@ -5,14 +5,20 @@ export function References() {
 
   return (
     <section id="references" className="references-section">
-      <div className="container">
-        <h2>{t.references.title}</h2>
-        <p>{t.references.intro}</p>
-        <ol className="refs-list">
-          {t.references.items.map((item, i) => (
-            <li key={i}>{item}</li>
-          ))}
-        </ol>
+      <div className="container refs-container">
+        <details className="refs-collapsible">
+          <summary>
+            <h2 className="refs-summary-title">{t.references.title}</h2>
+          </summary>
+          <div className="refs-collapsible-body">
+            <p>{t.references.intro}</p>
+            <ol className="refs-list">
+              {t.references.items.map((item, i) => (
+                <li key={i}>{item}</li>
+              ))}
+            </ol>
+          </div>
+        </details>
       </div>
     </section>
   );

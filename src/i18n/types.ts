@@ -79,6 +79,10 @@ export interface Translations {
     polarLocalMin: string;
     polarCurrent: string;
     polarClickHint: string;
+    labFlow: string;
+    sectionSetup: string;
+    sectionObserve: string;
+    exploreHint: string;
   };
   compass: {
     label: string;
@@ -140,6 +144,11 @@ export interface Translations {
   ai: {
     title: string;
     hint: string;
+    statusLabel: string;
+    presetsLabel: string;
+    composeHint: string;
+    modeDynamic: string;
+    modeFrozen: string;
     responseLabel: string;
     footnote: string;
     q1: string;

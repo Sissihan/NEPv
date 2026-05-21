@@ -8,9 +8,9 @@ export function Nav() {
     { href: '#hero', label: t.nav.home },
     { href: '#compare', label: t.nav.compare },
     { href: '#playground', label: t.nav.playground },
+    { href: '#ai-tutor', label: t.nav.aiTutor },
     { href: '#pitfalls', label: t.nav.pitfalls },
     { href: '#references', label: t.nav.references },
-    { href: '#playground', label: t.nav.aiTutor },
   ];
 
   return (
@@ -20,7 +20,7 @@ export function Nav() {
           {t.nav.brand}
         </a>
         {links.map((l) => (
-          <a key={l.href} href={l.href}>
+          <a key={l.label} href={l.href}>
             {l.label}
           </a>
         ))}

@@ -12,10 +12,7 @@ interface Props {
   showAxes?: boolean;
 }
 
-const SIZE = 200;
-const CX = SIZE / 2;
-const CY = SIZE / 2;
-const R = 80;
+const DEFAULT_SIZE = 200;
 
 export function VectorCompass({
   x,
@@ -25,7 +22,12 @@ export function VectorCompass({
   onNormalized,
   trajectory = [],
   showAxes = false,
-}: Props) {
+  size = DEFAULT_SIZE,
+}: Props & { size?: number }) {
+  const SIZE = size;
+  const CX = SIZE / 2;
+  const CY = SIZE / 2;
+  const R = SIZE * 0.4;
   const { t } = useI18n();
   const dragging = useRef(false);
   const [toast, setToast] = useState<string | null>(null);

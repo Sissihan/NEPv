@@ -20,9 +20,16 @@ interface Props {
   xCurrent: Vec;
   lambdaGuess: number;
   onSelectTheta?: (theta: number, sample: PolarSample) => void;
+  embedded?: boolean;
 }
 
-export function PolarPlot({ model, params, xCurrent, lambdaGuess, onSelectTheta }: Props) {
+export function PolarPlot({
+  model,
+  params,
+  xCurrent,
+  onSelectTheta,
+  embedded = false,
+}: Props) {
   const { t } = useI18n();
 
   const samples = useMemo(
@@ -77,9 +84,13 @@ export function PolarPlot({ model, params, xCurrent, lambdaGuess, onSelectTheta 
   }
 
   return (
-    <div className="polar-plot card">
-      <h3>{t.playground.polarTitle}</h3>
-      <p className="polar-caption">{t.playground.polarCaption}</p>
+    <div className={`polar-plot ${embedded ? 'polar-plot--embedded' : 'card'}`}>
+      {!embedded && (
+        <>
+          <h3>{t.playground.polarTitle}</h3>
+          <p className="polar-caption">{t.playground.polarCaption}</p>
+        </>
+      )}
       <svg
         width={SIZE}
         height={SIZE}

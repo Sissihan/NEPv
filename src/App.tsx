@@ -19,9 +19,12 @@ export default function App() {
   return (
     <>
       <Nav />
-      <main>
-        <Hero />
-        <Compare />
+      <main className="page-main">
+        <div className="intro-band">
+          <Hero />
+          <div className="intro-divider" role="separator" aria-hidden="true" />
+          <Compare />
+        </div>
         <Playground />
         <Pitfalls />
         <References />

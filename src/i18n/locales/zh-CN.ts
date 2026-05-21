@@ -17,12 +17,12 @@ const zhCN: Translations = {
   },
   hero: {
     tag: '教学演示 · n ≤ 4',
-    title: 'NEPv Lens',
+    title: '定义',
     lead: '探索算子随特征向量变化的非线性特征值问题：改变 x 会重塑 A(x)。',
     footnote: '向量显示在单位球面上（‖x‖=1）。本演示仅用于建立直觉，不能求解所有 NEPv 实例。',
   },
   compare: {
-    title: '阶段 0 — 线性热身与 NEPv 对比',
+    title: '线性热身与 NEPv 对比',
     nepDefinitionTitle: 'NEPv 自洽解定义',
     nepDefinition:
       '一对 (λ, x)，x ≠ 0，当且仅当 A(x)x = λx 且 x 是算子 A(x) 本身的特征向量（而非某个冻结矩阵的特征向量）时，才是解。',
@@ -33,7 +33,7 @@ const zhCN: Translations = {
     note: '一般问题 F(λ,x)=0 可能比此处使用的 A(x)x=λx 形式更宽泛。',
   },
   playground: {
-    title: '阶段 1–2 — 罗盘实验室与迭代',
+    title: '耦合罗盘与迭代实验室',
     lead: '拖动罗盘、调节猜测 λ，对比真实 NEPv 残差与“冻结 A”误区。',
     stage0: '概念',
     stage1: '罗盘',
@@ -70,6 +70,10 @@ const zhCN: Translations = {
     polarLocalMin: '● 局部极小',
     polarCurrent: '◆ 当前方向',
     polarClickHint: '点击极小值点可转动罗盘并将 λ 设为最佳 μᵢ。',
+    labFlow: '设置 → 探索方向 → 观察 A(x) → 扫描 r(θ) → 运行 SCF',
+    sectionSetup: '设置',
+    sectionObserve: '算子与谱',
+    exploreHint: '拖动指针：x 决定耦合问题的方向。',
   },
   compass: {
     label: '向量罗盘（‖x‖=1）',
@@ -90,7 +94,7 @@ const zhCN: Translations = {
     conjugatePair: '共轭对',
   },
   iteration: {
-    title: '阶段 2 — 迭代实验室（SCF）',
+    title: '迭代实验室（SCF）',
     scfNote: '自洽场迭代：x_{k+1}=A(x_k) 的选定特征向量，再归一化。',
     modeLabel: '特征向量选取',
     modeMax: '最大 |μ|',
@@ -111,7 +115,7 @@ const zhCN: Translations = {
     diagWarn: 'α 过大或间隙过小 — 可能不收敛，请尝试减小 α。',
   },
   pitfalls: {
-    title: '阶段 4 — 误区与 FAQ',
+    title: '误区与 FAQ',
     freezeTitle: '冻结 A(x) ≠ 解 NEPv',
     freezeP1: '取 x₀、冻结 A(x₀) 再解线性 EVP 是常见误区 — 它将算子与特征向量解耦。',
     freezeP2: '使用下方交互验证。',
@@ -136,6 +140,11 @@ const zhCN: Translations = {
   ai: {
     title: 'AI 数学助教',
     hint: '状态感知教学助手（规则驱动；可接 API）。',
+    statusLabel: '当前状态',
+    presetsLabel: '常见问题',
+    composeHint: '状态感知教学助手（规则驱动；可接 API）。',
+    modeDynamic: '动态 NEPv',
+    modeFrozen: '冻结 A',
     responseLabel: '回复',
     footnote: 'AI 辅助、人工核验。生产环境可将 askAI() 替换为 LLM API。',
     q1: '为什么不收敛？',

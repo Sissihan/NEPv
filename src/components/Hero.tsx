@@ -7,8 +7,7 @@ export function Hero() {
   return (
     <section id="hero">
       <div className="container">
-        <span className="tag">{t.hero.tag}</span>
-        <h1>{t.hero.title}</h1>
+        <h2 className="compare-heading">{t.hero.title}</h2>
         <p className="lead">{t.hero.lead}</p>
         <MathBlock tex="A(x)\,x = \lambda x,\quad r(x,\lambda)=\|A(x)x-\lambda x\|_2" />
         <p>{t.hero.footnote}</p>
